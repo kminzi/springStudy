@@ -2,11 +2,14 @@ package com.study.springstudy.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.tomcat.jni.Local;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest
+//slicing test - 이 경우는 mocking 적용이 되므로 repository 반영 안 됨.
+//@WebMvcTest
+@SpringBootTest //통합 테스트
+@AutoConfigureMockMvc
 public class EventControllerTests {
 
     @Autowired
@@ -30,8 +36,8 @@ public class EventControllerTests {
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockBean
-    EventRepository eventRepository;
+//    @MockBean
+//    EventRepository eventRepository;
 
     @Test
     public void createEvent() throws Exception {
@@ -48,8 +54,8 @@ public class EventControllerTests {
                 .location("kt")
                 .build();
 
-        event.setId(100);
-        Mockito.when(eventRepository.save(event)).thenReturn(event);
+        //event.setId(100);
+        //Mockito.when(eventRepository.save(event)).thenReturn(event);
 
         //post 요청을 보내는 것
         mockMvc.perform(post("/api/events/")
@@ -60,7 +66,10 @@ public class EventControllerTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").exists())
                 .andExpect(header().exists(HttpHeaders.LOCATION))
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/hal+json"));
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/hal+json"))
+                .andExpect(jsonPath("id").value(Matchers.not(100)))
+                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT));
     }
 
 }
