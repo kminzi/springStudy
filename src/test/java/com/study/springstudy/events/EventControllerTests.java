@@ -41,7 +41,7 @@ public class EventControllerTests {
 
     @Test
     public void createEvent() throws Exception {
-        Event event = Event.builder()
+        EventDto event = EventDto.builder()
                 .name("Spring")
                 .description("test1")
                 .beginEnrollmentDateTime(LocalDateTime.of(2021, 6, 21, 11, 40))
@@ -70,6 +70,38 @@ public class EventControllerTests {
                 .andExpect(jsonPath("id").value(Matchers.not(100)))
                 .andExpect(jsonPath("free").value(Matchers.not(true)))
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT));
+    }
+
+    @Test
+    public void createEvent_Bad_Request() throws Exception {
+        Event event = Event.builder()
+                .id(100)
+                .name("Spring")
+                .description("test2")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021, 6, 21, 11, 40))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021, 6, 22, 11, 35))
+                .beginEventDateTime(LocalDateTime.of(2021, 7, 1, 11, 11))
+                .endEventDateTime(LocalDateTime.of(2021, 7, 2, 11, 11))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .free(true)
+                .offline(false)
+                .eventStatus(EventStatus.PUBLISHED)
+                .location("kt")
+                .build();
+
+        //event.setId(100);
+        //Mockito.when(eventRepository.save(event)).thenReturn(event);
+
+        //post 요청을 보내는 것
+        mockMvc.perform(post("/api/events/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event))) //객체를 JSON으로 변환해서 body에 넣음
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+        ;
     }
 
 }
