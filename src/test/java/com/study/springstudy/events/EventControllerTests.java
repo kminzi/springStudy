@@ -1,15 +1,23 @@
 package com.study.springstudy.events;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.tomcat.jni.Local;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -19,14 +27,38 @@ public class EventControllerTests {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @MockBean
+    EventRepository eventRepository;
+
     @Test
     public void createEvent() throws Exception {
+        Event event = Event.builder()
+                .name("Spring")
+                .description("test1")
+                .beginEnrollmentDateTime(LocalDateTime.of(2021, 6, 21, 11, 40))
+                .closeEnrollmentDateTime(LocalDateTime.of(2021, 6, 22, 11, 35))
+                .beginEventDateTime(LocalDateTime.of(2021, 7, 1, 11, 11))
+                .endEventDateTime(LocalDateTime.of(2021, 7, 2, 11, 11))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("kt")
+                .build();
+
+        event.setId(100);
+        Mockito.when(eventRepository.save(event)).thenReturn(event);
+
         //post 요청을 보내는 것
         mockMvc.perform(post("/api/events/")
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaTypes.HAL_JSON)
-                    )
-                .andExpect(status().isCreated());
+                    .content(objectMapper.writeValueAsString(event))) //객체를 JSON으로 변환해서 body에 넣음
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("id").exists());
     }
 
 }
