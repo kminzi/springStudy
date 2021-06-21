@@ -47,6 +47,7 @@ public class EventControllerTests {
                 .limitOfEnrollment(100)
                 .location("kt")
                 .build();
+
         event.setId(100);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
 
