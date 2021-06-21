@@ -1,6 +1,7 @@
 package com.study.springstudy.events;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.internal.Errors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.validation.Valid;
 import java.net.URI;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -29,7 +31,11 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity createEvent(@RequestBody EventDto eventDto){
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
+        if(errors.hasErrors()){
+            return ResponseEntity.badRequest().build();
+        }
+
         //EventDto -> Event(value limit 을 위함)
         //방법1. Builder를 이용한 직접 변환
         Event event1 = Event.builder()
@@ -42,8 +48,6 @@ public class EventController {
         Event newEvent = this.eventRepository.save(event);
         URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
         return ResponseEntity.created(createdUri).body(event);
-
-
     }
 }
 

@@ -91,10 +91,6 @@ public class EventControllerTests {
                 .location("kt")
                 .build();
 
-        //event.setId(100);
-        //Mockito.when(eventRepository.save(event)).thenReturn(event);
-
-        //post 요청을 보내는 것
         mockMvc.perform(post("/api/events/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaTypes.HAL_JSON)
@@ -102,6 +98,17 @@ public class EventControllerTests {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
         ;
+    }
+
+    @Test
+    public void createEvent_Bad_Request_Empty_Input() throws Exception {
+        EventDto eventDto = EventDto.builder().build();
+
+        this.mockMvc.perform(post("/api/events")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.objectMapper.writeValueAsString(eventDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 
 }
