@@ -55,10 +55,16 @@ public class EventController {
         //방법2. ModelMapper 사용
         Event event = modelMapper.map(eventDto, Event.class);
         event.update();
-
         Event newEvent = this.eventRepository.save(event);
-        URI createdUri = linkTo(EventController.class).slash(newEvent.getId()).toUri();
-        return ResponseEntity.created(createdUri).body(event);
+
+        //hateoas 만족을 위한 링크 생성
+        WebMvcLinkBuilder selflinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
+        URI createdUri = selflinkBuilder.toUri();
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(selflinkBuilder.withSelfRel());
+        eventResource.add(selflinkBuilder.withRel("update-events")); //PUT method를 사용하게 됨
+        return ResponseEntity.created(createdUri).body(eventResource);
     }
 }
 
