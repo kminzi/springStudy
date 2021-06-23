@@ -12,7 +12,7 @@
     <artifactId>springStudy</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>springStudy</name>
-    <description>Demo project for Spring Boot</description>
+    <description>Study for Spring Boot</description>
     <properties>
         <java.version>1.8</java.version>
     </properties>
@@ -70,6 +70,13 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>pl.pragmatists</groupId>
+            <artifactId>JUnitParams</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
