@@ -1,5 +1,6 @@
 package com.study.springstudy.events;
 
+import com.study.springstudy.common.ErrorsResource;
 import org.modelmapper.ModelMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +38,13 @@ public class EventController {
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
         //@valid 에 의한 validation
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().body(errors);
+            return badRequest(errors);
         }
 
         //custom validation
         eventValidator.validate(eventDto, errors);
         if(errors.hasErrors()){
-            return ResponseEntity.badRequest().body(errors);
+            return badRequest(errors);
         }
 
         //EventDto -> Event(value limit 을 위함)
@@ -66,6 +67,10 @@ public class EventController {
         eventResource.add(selflinkBuilder.withRel("update-events")); //PUT method를 사용하게 됨
         eventResource.add(new Link("/docs/indexFile.html#resources-events-create").withRel("profile"));
         return ResponseEntity.created(createdUri).body(eventResource);
+    }
+
+    private ResponseEntity badRequest(Errors errors) {
+        return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
 }
 

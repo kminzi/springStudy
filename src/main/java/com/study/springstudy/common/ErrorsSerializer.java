@@ -13,6 +13,7 @@ public class ErrorsSerializer extends JsonSerializer<Errors> {
 //error 객체를 serialize할 때, 해당 코드를 사용하도록 jsoncomponent 로 등록
     @Override
     public void serialize(Errors errors, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
+        gen.writeFieldName("errors");
         gen.writeStartArray();
 
         //field error 처리
