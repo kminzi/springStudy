@@ -66,7 +66,6 @@ public class EventController {
         URI createdUri = selflinkBuilder.toUri();
         EventResource eventResource = new EventResource(event);
         eventResource.add(linkTo(EventController.class).withRel("query-events"));
-        eventResource.add(selflinkBuilder.withSelfRel());
         eventResource.add(selflinkBuilder.withRel("update-events")); //PUT method를 사용하게 됨
         eventResource.add(new Link("/docs/indexFile.html#resources-events-create").withRel("profile"));
         return ResponseEntity.created(createdUri).body(eventResource);
@@ -90,6 +89,34 @@ public class EventController {
         Event event = optionalEvent.get();
         EventResource eventResource = new EventResource(event);
         eventResource.add(new Link("/docs/indexFile.html#resources-events-get").withRel("profile"));
+        return ResponseEntity.ok(eventResource);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody @Valid EventDto eventDto,
+                                      Errors errors){
+        //존재하지 않는 아이디로 요청
+        Optional<Event> optionalEvent = this.eventRepository.findById(id);
+        if(!optionalEvent.isPresent()){
+            return ResponseEntity.notFound().build();
+        }
+
+        //request body validation
+        if(errors.hasErrors()){
+            return badRequest(errors);
+        }
+        this.eventValidator.validate(eventDto, errors);
+        if(errors.hasErrors()){
+            return badRequest(errors);
+        }
+
+        Event existingEvent = optionalEvent.get();
+        this.modelMapper.map(eventDto, existingEvent); //(바꿀 데이터, 기존 데이터)
+        Event savedEvent = this.eventRepository.save(existingEvent);
+
+        EventResource eventResource = new EventResource(savedEvent);
+        eventResource.add(new Link("/docs/indexFile.html#resources-events-update").withRel("profile"));
+
         return ResponseEntity.ok(eventResource);
     }
 
