@@ -214,13 +214,11 @@ public class EventControllerTests {
     @TestDescription("30개의 이벤트를 10개씩 두번재 페이지 조회하기")
     public void queryEvents() throws Exception {
         //given
-        IntStream.range(0, 30).forEach(i -> {
-            this.generateEvent(i);
-        });
+        IntStream.range(0, 30).forEach(this::generateEvent);
 
-        //when
+        //when & then
         this.mockMvc.perform(get("/api/events")
-                    .param("page","1")
+                    .param("page","1") //기본이 0부터 시작함
                     .param("size", "10")
                     .param("sort", "name,DESC")
                 )
@@ -229,17 +227,48 @@ public class EventControllerTests {
                 .andExpect(jsonPath("page").exists())
                 .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
-                .andDo(document("query-events"))
+                .andDo(document("query-events"))//문서화
         ;
     }
 
-    private void generateEvent(int index){
+    @Test
+    @TestDescription("기존의 이벤트를 하나 조회하기")
+    public void getEvent() throws Exception {
+        //given
+        Event event = this.generateEvent(100);
+
+        //when & then
+        this.mockMvc.perform(get("/api/events/{id}",event.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("name").exists())
+                    .andExpect(jsonPath("id").exists())
+                    .andExpect(jsonPath("_links.self").exists())
+                    .andExpect(jsonPath("_links.profile").exists())
+                    .andDo(print())
+                    .andDo(document("get-event"))
+        ;
+    }
+
+    @Test
+    @TestDescription("없는 이벤트를 조회했을 때 404 응답받기")
+    public void getEvent_Bad_Request() throws Exception {
+        //given
+        this.generateEvent(100);
+
+        //when & then
+        this.mockMvc.perform(get("/api/events/{id}","200"))
+                .andExpect(status().isNotFound())
+                .andDo(print())
+        ;
+    }
+
+    private Event generateEvent(int index){
         Event event = Event.builder()
                 .name("event "+index)
-                .description("test event")
+                .description("test event " + index)
                 .build();
 
-        this.eventRepository.save(event);
+        return this.eventRepository.save(event);
     }
 
 
