@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -47,6 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     //security filter 적용에 대한 설정
     public void configure(WebSecurity web) throws Exception {
+        //정적 리소스에 대해서는 web에서 먼저 처리해주는게 부하가 조금 작다는 장점이 있음
         web.ignoring().mvcMatchers("/docs/index.html");
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations()); //정적리소스에 대한 적용 제거
     }
@@ -54,8 +56,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     //이건 spring security 안으로는 들어오고 그 안에서 걸러지는 방식(websecurity -> httpsecurity)
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .mvcMatchers("/docs/index.html").anonymous()
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).anonymous();
+//        http.authorizeRequests()
+//                .mvcMatchers("/docs/index.html").anonymous()
+//                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).anonymous();
+
+        http.anonymous().and()
+                .formLogin().and()
+                .authorizeRequests().mvcMatchers(HttpMethod.GET, "/api/**").anonymous()
+                                    .anyRequest().authenticated();
     }
 }
