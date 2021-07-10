@@ -43,7 +43,7 @@ public class AppConfig {
                 set.add(AccountRole.USER);
 
                 Account minji = Account.builder()
-                        .email("minji@gmail.com")
+                        .email("mj@gmail.com")
                         .password("mj")
                         .roles(set)
                         .build();

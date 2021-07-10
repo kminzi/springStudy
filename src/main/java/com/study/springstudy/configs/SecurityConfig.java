@@ -60,9 +60,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .mvcMatchers("/docs/index.html").anonymous()
 //                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).anonymous();
 
-        http.anonymous().and()
-                .formLogin().and()
-                .authorizeRequests().mvcMatchers(HttpMethod.GET, "/api/**").anonymous()
-                                    .anyRequest().authenticated();
+//        http.anonymous().and()
+//                .formLogin().and()
+//                .authorizeRequests().mvcMatchers(HttpMethod.GET, "/api/**").anonymous()
+//                                    .anyRequest().authenticated();
     }
 }
