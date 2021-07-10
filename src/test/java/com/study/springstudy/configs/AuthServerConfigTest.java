@@ -25,6 +25,8 @@ public class AuthServerConfigTest extends BaseControllerTest {
     @Test
     @TestDescription("인증 token을 발급 받는 테스트")
     public void getAuthToken() throws Exception {
+
+        //given
         Set<AccountRole> set= new HashSet<>();
         set.add(AccountRole.ADMIN);
         set.add(AccountRole.USER);
@@ -43,6 +45,7 @@ public class AuthServerConfigTest extends BaseControllerTest {
 
         accountService.saveAccount(account);
 
+        //when&then
         //grant type: password
         this.mockMvc.perform(post("/oauth/token")
                     .with(httpBasic(clientId, clientSecret))

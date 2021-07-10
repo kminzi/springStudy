@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 
 @Configuration
 @EnableAuthorizationServer
+//인증 서버는 주로 서비스 자원을 처리하는 서버와 따로 운영
 public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     @Autowired
     PasswordEncoder passwordEncoder;
