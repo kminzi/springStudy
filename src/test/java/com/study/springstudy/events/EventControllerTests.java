@@ -6,6 +6,7 @@ import com.study.springstudy.accounts.Account;
 import com.study.springstudy.accounts.AccountRepository;
 import com.study.springstudy.accounts.AccountRole;
 import com.study.springstudy.accounts.AccountService;
+import com.study.springstudy.common.AppProperties;
 import com.study.springstudy.common.BaseControllerTest;
 import com.study.springstudy.common.RestDocsConfiguration;
 import com.study.springstudy.common.TestDescription;
@@ -47,6 +48,9 @@ public class EventControllerTests extends BaseControllerTest {
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    AppProperties appProperties;
 
     @Before
     //event, account가 계속 겹치므로 테스트 할 때마다 DB를 비워주는 방법
@@ -156,26 +160,19 @@ public class EventControllerTests extends BaseControllerTest {
         set.add(AccountRole.ADMIN);
         set.add(AccountRole.USER);
 
-        String username = "minji@gmail.com";
-        String password = "pass";
-
         Account account = Account.builder()
-                .email(username)
-                .password(password)
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
                 .roles(set)
                 .build();
-
-        String clientId = "myid";
-        String clientSecret = "mysecret";
-
         accountService.saveAccount(account);
 
         //when
         //grant type: password
         ResultActions perform = this.mockMvc.perform(post("/oauth/token")
-                .with(httpBasic(clientId, clientSecret))
-                .param("username", username)
-                .param("password", password)
+                .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                .param("username", appProperties.getUserUsername())
+                .param("password", appProperties.getUserPassword())
                 .param("grant_type", "password")
         );
         MockHttpServletResponse response = perform.andReturn().getResponse();
