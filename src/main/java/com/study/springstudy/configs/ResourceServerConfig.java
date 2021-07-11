@@ -23,7 +23,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         http
                 .anonymous().and()
                 .authorizeRequests()
-                    .mvcMatchers(HttpMethod.GET, "/api/**").anonymous()
+                    .mvcMatchers(HttpMethod.GET, "/api/**").permitAll() //anonymous로 하면 인증한 사용자는 접근 불가
                     .anyRequest().authenticated().and()
                 .exceptionHandling()//인증이 잘못되거나 권한이 없는 경우
                     .accessDeniedHandler(new OAuth2AccessDeniedHandler());
