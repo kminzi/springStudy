@@ -1,7 +1,5 @@
 package com.study.springstudy.events;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.study.springstudy.accounts.Account;
 import com.study.springstudy.accounts.AccountRepository;
 import com.study.springstudy.accounts.AccountRole;
@@ -270,6 +268,30 @@ public class EventControllerTests extends BaseControllerTest {
                 .andExpect(jsonPath("page").exists())
                 .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
                 .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-events"))//문서화
+        ;
+    }
+
+    @Test
+    @TestDescription("사용자 인증이 이루어진 이후에 30개의 이벤트를 10개씩 두번재 페이지 조회하기")
+    public void queryEventsWithAuthentication() throws Exception {
+        //given
+        IntStream.range(0, 30).forEach(this::generateEvent);
+
+        //when & then
+        this.mockMvc.perform(get("/api/events")
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .param("page", "1") //기본이 0부터 시작함
+                .param("size", "10")
+                .param("sort", "name,DESC")
+        )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andExpect(jsonPath("_links.create-event").exists())
                 .andDo(document("query-events"))//문서화
         ;
     }

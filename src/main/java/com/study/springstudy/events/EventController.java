@@ -1,6 +1,10 @@
 package com.study.springstudy.events;
 
+import com.study.springstudy.accounts.Account;
+import com.study.springstudy.accounts.AccountAdapter;
+import com.study.springstudy.accounts.CurrentUser;
 import com.study.springstudy.common.ErrorsResource;
+import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
 import lombok.var;
 import org.modelmapper.ModelMapper;
 
@@ -11,7 +15,12 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +47,9 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors){
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors,
+                                      @CurrentUser Account account){
+
         //@valid 에 의한 validation
         if(errors.hasErrors()){
             return badRequest(errors);
@@ -59,6 +70,7 @@ public class EventController {
         //방법2. ModelMapper 사용
         Event event = modelMapper.map(eventDto, Event.class);
         event.update();
+        event.setManager(account);
         Event newEvent = this.eventRepository.save(event);
 
         //hateoas 만족을 위한 링크 생성
@@ -72,15 +84,28 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler){
+    public ResponseEntity queryEvents(Pageable pageable,
+                                      PagedResourcesAssembler<Event> assembler,
+                                      @CurrentUser Account account){
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        //accountService 에서 구현한 loadUserByUsername이 호출됨 => authenticationPrincipal 을 사용하면 자동 주입
+//        User principal = (User)authentication.getPrincipal();
+
         Page<Event> page = this.eventRepository.findAll(pageable);
         var pagedModel = assembler.toModel(page, e -> new EventResource(e));
         pagedModel.add(new Link("/docs/indexFile.html#resources-events-list").withRel("profile"));
+
+        if(account != null){//auth된 경우
+            pagedModel.add(linkTo(EventController.class).withRel("create-event"));
+        }
+
         return ResponseEntity.ok(pagedModel);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getEvent(@PathVariable Integer id){
+    public ResponseEntity getEvent(@PathVariable Integer id,
+                                   @CurrentUser Account account){
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
         if(!optionalEvent.isPresent()){
             return ResponseEntity.notFound().build();
@@ -89,12 +114,16 @@ public class EventController {
         Event event = optionalEvent.get();
         EventResource eventResource = new EventResource(event);
         eventResource.add(new Link("/docs/indexFile.html#resources-events-get").withRel("profile"));
+        if (event.getManager().equals(account)){
+            eventResource.add(linkTo(EventController.class).slash(event.getId()).withRel("update-event"));
+        }
+
         return ResponseEntity.ok(eventResource);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody @Valid EventDto eventDto,
-                                      Errors errors){
+                                      Errors errors, @CurrentUser Account account){
         //존재하지 않는 아이디로 요청
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
         if(!optionalEvent.isPresent()){
@@ -111,6 +140,9 @@ public class EventController {
         }
 
         Event existingEvent = optionalEvent.get();
+        if(!existingEvent.getManager().equals(account)){
+            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+        }
         this.modelMapper.map(eventDto, existingEvent); //(바꿀 데이터, 기존 데이터)
         Event savedEvent = this.eventRepository.save(existingEvent);
 

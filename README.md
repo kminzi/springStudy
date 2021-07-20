@@ -2,6 +2,15 @@
 
 인프런 '스프링 기반 REST API 개발(백기선)' 강의를 수강하면서 공부한 Spring Project
 
+### 개발환경
+java 8
+intelliJ
+SpringBoot
+SpringSecurity
+
+
+### 목차
+
 
 API Index 생성하기
 API의 진입점을 통해 리소스를 제공하고, API 리소스들에 대한 링크를 제공하기 위함.

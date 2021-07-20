@@ -35,12 +35,6 @@ public class AccountService implements UserDetailsService {
 
         //spring security 가 사용하는 객체로 변환하는 과정
         //userdetail를 구현해둔 user를 사용함 User(username, password, authorities)
-        return new User(account.getEmail(), account.getPassword(), authorities(account.getRoles()));
-    }
-
-    private Collection<? extends GrantedAuthority> authorities(Set<AccountRole> roles) {
-        return roles.stream()
-                .map(r -> new SimpleGrantedAuthority("ROLE : " + r.name()))
-                .collect(Collectors.toSet());
+        return new AccountAdapter(account);
     }
 }
