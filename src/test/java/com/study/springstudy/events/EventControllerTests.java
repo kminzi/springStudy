@@ -80,7 +80,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         //post 요청을 보내는 것
         mockMvc.perform(post("/api/events/")
-                    .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                    .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaTypes.HAL_JSON)
                     .content(objectMapper.writeValueAsString(event))) //객체를 JSON으로 변환해서 body에 넣음
@@ -145,24 +145,15 @@ public class EventControllerTests extends BaseControllerTest {
                 ));
     }
 
-    @NotNull
-    private String getBearerToken() throws Exception {
-        return "Bearer " + getAccessToken();
+    private String getBearerToken(boolean needToCreateAccount) throws Exception {
+        return "Bearer " + getAccessToken(needToCreateAccount);
     }
 
-    private String getAccessToken() throws Exception {
+
+    private String getAccessToken(boolean needToCreateAccount) throws Exception {
 
         //given
-        Set<AccountRole> set= new HashSet<>();
-        set.add(AccountRole.ADMIN);
-        set.add(AccountRole.USER);
-
-        Account account = Account.builder()
-                .email(appProperties.getUserUsername())
-                .password(appProperties.getUserPassword())
-                .roles(set)
-                .build();
-        accountService.saveAccount(account);
+        if (needToCreateAccount) createAccount();
 
         //when
         //grant type: password
@@ -177,6 +168,19 @@ public class EventControllerTests extends BaseControllerTest {
 
         Jackson2JsonParser parser = new Jackson2JsonParser();
         return parser.parseMap(responseBody).get("access_token").toString();
+    }
+
+    private Account createAccount() {
+        Set<AccountRole> set= new HashSet<>();
+        set.add(AccountRole.ADMIN);
+        set.add(AccountRole.USER);
+
+        Account account = Account.builder()
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
+                .roles(set)
+                .build();
+        return accountService.saveAccount(account);
     }
 
     @Test
@@ -200,7 +204,7 @@ public class EventControllerTests extends BaseControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/events/")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaTypes.HAL_JSON)
                 .content(objectMapper.writeValueAsString(event))) //객체를 JSON으로 변환해서 body에 넣음
@@ -215,7 +219,7 @@ public class EventControllerTests extends BaseControllerTest {
         EventDto eventDto = EventDto.builder().build();
 
         this.mockMvc.perform(post("/api/events")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
@@ -239,7 +243,7 @@ public class EventControllerTests extends BaseControllerTest {
                 .build();
 
         this.mockMvc.perform(post("/api/events")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
@@ -280,7 +284,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         //when & then
         this.mockMvc.perform(get("/api/events")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .param("page", "1") //기본이 0부터 시작함
                 .param("size", "10")
                 .param("sort", "name,DESC")
@@ -300,10 +304,12 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("기존의 이벤트를 하나 조회하기")
     public void getEvent() throws Exception {
         //given
-        Event event = this.generateEvent(100);
+        Account account = createAccount();
+        Event event = this.generateEvent(100, account);
 
         //when & then
-        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+        this.mockMvc.perform(get("/api/events/{id}", event.getId())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("name").exists())
                 .andExpect(jsonPath("id").exists())
@@ -331,14 +337,16 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("정상적으로 기존의 이벤트를 수정하기")
     public void updateEvent() throws Exception {
         //given
-        Event event = this.generateEvent(100);
+        Account account = createAccount();
+        Event event = this.generateEvent(100, account);
+
         String updateEventName = "update Name";
         EventDto eventDto = this.modelMapper.map(event, EventDto.class);
         eventDto.setName(updateEventName);
 
         //when & then
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(false))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isOk())
@@ -358,7 +366,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         //when & then
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isBadRequest())
@@ -376,7 +384,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         //when & then
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isBadRequest())
@@ -394,7 +402,7 @@ public class EventControllerTests extends BaseControllerTest {
 
         //when & then
         this.mockMvc.perform(put("/api/events/{id}", "1231243")
-                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken(true))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andExpect(status().isNotFound())
@@ -402,8 +410,18 @@ public class EventControllerTests extends BaseControllerTest {
         ;
     }
 
+    private Event generateEvent(int index, Account account) {
+        Event event = buildEvent(index);
+        event.setManager(account);
+        return this.eventRepository.save(event);
+    }
 
     private Event generateEvent(int index) {
+        Event event = buildEvent(index);
+        return this.eventRepository.save(event);
+    }
+
+    private Event buildEvent(int index) {
         Event event = Event.builder()
                 .name("event " + index)
                 .description("test event " + index)
@@ -419,7 +437,6 @@ public class EventControllerTests extends BaseControllerTest {
                 .offline(true)
                 .eventStatus(EventStatus.DRAFT)
                 .build();
-
-        return this.eventRepository.save(event);
+        return event;
     }
 }
