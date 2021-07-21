@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 //test 환경의 설정 값 적용
 @ActiveProfiles("test")
 @Ignore //test실행에서 제외하는 annotation
-public class BaseControllerTest {
+public class BaseTest {
     @Autowired
     protected MockMvc mockMvc;
 

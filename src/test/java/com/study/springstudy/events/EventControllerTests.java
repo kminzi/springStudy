@@ -5,13 +5,10 @@ import com.study.springstudy.accounts.AccountRepository;
 import com.study.springstudy.accounts.AccountRole;
 import com.study.springstudy.accounts.AccountService;
 import com.study.springstudy.common.AppProperties;
-import com.study.springstudy.common.BaseControllerTest;
-import com.study.springstudy.common.RestDocsConfiguration;
+import com.study.springstudy.common.BaseTest;
 import com.study.springstudy.common.TestDescription;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -35,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class EventControllerTests extends BaseControllerTest {
+public class EventControllerTests extends BaseTest {
 
     @Autowired
     EventRepository eventRepository;
